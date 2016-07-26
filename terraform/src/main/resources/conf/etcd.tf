@@ -79,7 +79,7 @@ resource "aws_subnet" "eneko-subnet1" {
   cidr_block = "10.20.1.0/24"
   availability_zone = "eu-west-1a"
   tags = {
-    Name = "eneko"
+    Name = "eneko.public"
   }
 
 }
@@ -93,7 +93,7 @@ resource "aws_route_table" "eneko-vpc-routing-table" {
   }
 
   tags = {
-    Name = "eneko"
+    Name = "eneko.public"
   }
 
 }
@@ -114,13 +114,13 @@ resource "aws_subnet" "eneko-private-subnet1" {
 
 }
 
-resource "aws_eip" "eneko-private-subnet1-gw-eip" {
-  vpc = true
-}
+//resource "aws_eip" "eneko-private-subnet1-gw-eip" {
+//  vpc = true
+//}
 
-resource "aws_nat_gateway" "eneko-private-subnet1-gw" {
+resource "aws_nat_gateway" "eneko-private-subnet-gw" {
   subnet_id = "${aws_subnet.eneko-subnet1.id}"
-  allocation_id = "${aws_eip.eneko-private-subnet1-gw-eip.id}"
+  allocation_id = "${aws_eip.eneko-bastion-eip.id}"
 
 }
 
@@ -129,11 +129,11 @@ resource "aws_route_table" "eneko-private-subnet1-route-table" {
 
   route {
     cidr_block = "0.0.0.0/0"
-    nat_gateway_id = "${aws_nat_gateway.eneko-private-subnet1-gw.id}"
+    nat_gateway_id = "${aws_nat_gateway.eneko-private-subnet-gw.id}"
   }
 
   tags {
-    Name = "eneko"
+    Name = "eneko.private"
   }
 }
 
@@ -151,6 +151,24 @@ resource "aws_instance" "etcd-ec2" {
   key_name = "eneko-glf"
 
   tags = {
-    Name = "eneko"
+    Name = "eneko.private"
+  }
+}
+
+resource "aws_eip" "eneko-bastion-eip" {
+  vpc = true
+//  instance = "${aws_instance.eneko-bastion.id}"
+}
+
+resource "aws_instance" "eneko-bastion" {
+  subnet_id = "${aws_subnet.eneko-subnet1.id}"
+  vpc_security_group_ids = [
+    "${aws_security_group.eneko-sg-all.id}"]
+  ami = "ami-cbb5d5b8"
+  instance_type = "t2.nano"
+  key_name = "eneko-bastion"
+
+  tags = {
+    Name = "eneko.public"
   }
 }
