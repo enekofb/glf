@@ -34,3 +34,18 @@ wget http://52.208.52.48:4001/v2/keys/helloworld
 {"action":"get","node":{"key":"/helloworld","value":"Hello world","modifiedIndex":4,"createdIndex":4}}
 
 
+### Provisioning private instance with ansible
+
+In order to provision a private instance a bastion/vpn is needed. I follow the bastion approach so an instance in the public
+subnet is created to manage private network instances.
+
+#### Prepare bastion for provisioning
+- needs to have internet access (like it is in the public network, it has)
+- needs to be able to run ansible. Let's setup this machine: 1) setup terraform provisioner for this instance
+
+Project to use ansible as terraform provider
+https://github.com/jonmorehouse/terraform-provisioner-ansible
+
+
+
+

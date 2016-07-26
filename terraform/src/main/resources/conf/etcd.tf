@@ -114,14 +114,13 @@ resource "aws_subnet" "eneko-private-subnet1" {
 
 }
 
-//resource "aws_eip" "eneko-private-subnet1-gw-eip" {
-//  vpc = true
-//}
+resource "aws_eip" "eneko-private-subnet1-gw-eip" {
+  vpc = true
+}
 
 resource "aws_nat_gateway" "eneko-private-subnet-gw" {
   subnet_id = "${aws_subnet.eneko-subnet1.id}"
-  allocation_id = "${aws_eip.eneko-bastion-eip.id}"
-
+  allocation_id = "${aws_eip.eneko-private-subnet1-gw-eip.id}"
 }
 
 resource "aws_route_table" "eneko-private-subnet1-route-table" {
@@ -157,18 +156,27 @@ resource "aws_instance" "etcd-ec2" {
 
 resource "aws_eip" "eneko-bastion-eip" {
   vpc = true
-//  instance = "${aws_instance.eneko-bastion.id}"
+  instance = "${aws_instance.eneko-bastion.id}"
 }
 
 resource "aws_instance" "eneko-bastion" {
   subnet_id = "${aws_subnet.eneko-subnet1.id}"
   vpc_security_group_ids = [
     "${aws_security_group.eneko-sg-all.id}"]
-  ami = "ami-cbb5d5b8"
+  ami = "ami-f9dd458a"
   instance_type = "t2.nano"
   key_name = "eneko-bastion"
+
+  provisioner "ansible" {
+    connection {
+      user = "ec2-user"
+      private_key = "/home/eneko/.ssh/eneko-bastion.pem"
+    }
+    playbook = "ansible/playbook.yml"
+  }
 
   tags = {
     Name = "eneko.public"
   }
+
 }
