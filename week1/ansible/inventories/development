@@ -1,2 +1,4 @@
 [etcd]
-default ansible_ssh_host=etcd
+one.etcd
+two.etcd
+three.etcd
