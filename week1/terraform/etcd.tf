@@ -28,9 +28,9 @@ resource "aws_elb" "etcd" {
     "${aws_security_group.eneko-sg-all.id}"]
 
   listener {
-    instance_port = 4001
+    instance_port = 2379
     instance_protocol = "http"
-    lb_port = 4001
+    lb_port = 2379
     lb_protocol = "http"
   }
 
