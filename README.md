@@ -46,6 +46,42 @@ subnet is created to manage private network instances.
 Project to use ansible as terraform provider
 https://github.com/jonmorehouse/terraform-provisioner-ansible
 
+##### Ansible ssh bastion
 
+SSH bastion host:  In this post, I’m going to explore a very specific use of SSH: the SSH bastion host. In this sort of arrangement, SSH traffic to servers that are not directly accessible via SSH is instead directed through a bastion host, which proxies the connection between the SSH client and the remote servers.
 
+My file .ssh/config
+
+Host etcd
+  IdentityFile ~/.ssh/eneko-glf.pem
+  ProxyCommand ssh ec2-user@bastion -W %h:%p
+
+Host bastion
+  IdentityFile ~/.ssh/eneko-bastion.pem
+  ForwardAgent yes
+
+##### etcd provisioning with Ansible
+
+From our local machine using ssh bastion we are in position to install etcd
+A playbook called etc-playbook has been created. It executes just a role called "etcd" on the inventory host
+
+$ansible.dir>$ ansible-playbook -i inventories/development etcd-playbook.yml
+
+###### etcd role
+
+Very rough an basic one with the following tasks
+
+- name: download etcd
+  get_url: url=https://github.com/coreos/etcd/releases/download/v3.0.3/etcd-v3.0.3-linux-amd64.tar.gz dest=/tmp/etcd.tar.gz
+
+- name: create etcd directory
+  file: path=/tmp/etcd state=directory mode=0755
+
+- name: untar etcd
+  unarchive: src=/tmp/etcd.tar.gz dest=/tmp copy=no
+  sudo: true
+
+- name: execute etcd
+  shell: nohup /tmp/etcd-v3.0.3-linux-amd64/etcd &
+  become: true
 

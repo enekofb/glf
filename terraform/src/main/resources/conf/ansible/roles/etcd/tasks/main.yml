@@ -1,0 +1,14 @@
+
+- name: download etcd
+  get_url: url=https://github.com/coreos/etcd/releases/download/v3.0.3/etcd-v3.0.3-linux-amd64.tar.gz dest=/tmp/etcd.tar.gz
+
+- name: create etcd directory
+  file: path=/tmp/etcd state=directory mode=0755
+
+- name: untar etcd
+  unarchive: src=/tmp/etcd.tar.gz dest=/tmp copy=no
+  sudo: true
+
+- name: execute etcd
+  shell: nohup /tmp/etcd-v3.0.3-linux-amd64/etcd &
+  become: true

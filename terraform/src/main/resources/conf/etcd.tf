@@ -166,13 +166,12 @@ resource "aws_instance" "eneko-bastion" {
   ami = "ami-f9dd458a"
   instance_type = "t2.nano"
   key_name = "eneko-bastion"
-
 //  provisioner "ansible" {
 //    connection {
 //      user = "ec2-user"
 //      private_key = "/home/eneko/.ssh/eneko-development.pem"
 //    }
-//    playbook = "ansible/playbook.yml"
+//    playbook = "ansible/etcd-playbook.yml"
 //  }
 
   tags = {
