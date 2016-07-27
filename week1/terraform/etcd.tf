@@ -18,34 +18,34 @@ resource "aws_internet_gateway" "eneko-vpc-gw" {
   }
 }
 
-//resource "aws_elb" "etcd" {
-//  name = "etcd-elb"
-//  subnets = [
-//    "${aws_subnet.eneko-subnet1.id}"]
-//  instances = [
-//    "${aws_instance.etcd-ec2.id}"]
-//  security_groups = [
-//    "${aws_security_group.eneko-sg-all.id}"]
-//
-//  listener {
-//    instance_port = 4001
-//    instance_protocol = "http"
-//    lb_port = 4001
-//    lb_protocol = "http"
-//  }
-//
-//  health_check {
-//    healthy_threshold = 2
-//    unhealthy_threshold = 2
-//    timeout = 3
-//    target = "http:4001/v2/keys/helloworld"
-//    interval = 30
-//  }
-//
-//  tags {
-//    Name = "eneko"
-//  }
-//}
+resource "aws_elb" "etcd" {
+  name = "etcd-elb"
+  subnets = [
+    "${aws_subnet.eneko-subnet1.id}"]
+  instances = [
+    "${aws_instance.etcd-ec2.id}"]
+  security_groups = [
+    "${aws_security_group.eneko-sg-all.id}"]
+
+  listener {
+    instance_port = 4001
+    instance_protocol = "http"
+    lb_port = 4001
+    lb_protocol = "http"
+  }
+
+  health_check {
+    healthy_threshold = 2
+    unhealthy_threshold = 2
+    timeout = 3
+    target = "http:2379/v2/keys"
+    interval = 30
+  }
+
+  tags {
+    Name = "eneko"
+  }
+}
 
 resource "aws_security_group" "eneko-sg-all" {
   vpc_id = "${aws_vpc.eneko-vpc.id}"
