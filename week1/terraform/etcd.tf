@@ -60,6 +60,14 @@ resource "aws_route_table_association" "public" {
 resource "aws_eip" "eneko-bastion-eip" {
   vpc = true
   instance = "${aws_instance.eneko-bastion.id}"
+//  provisioner "ansible" {
+//    playbook = "../ansible/etcd-playbook.yml"
+//    connection {
+//      user = "ec2-user"
+//      key_file = "/home/eneko/.ssh/eneko-bastion.pem"
+//      host = "${aws_eip.eneko-bastion-eip.public_ip}"
+//    }
+//  }
 }
 
 resource "aws_instance" "eneko-bastion" {
@@ -70,14 +78,6 @@ resource "aws_instance" "eneko-bastion" {
   ami = "ami-f9dd458a"
   instance_type = "t2.nano"
   key_name = "eneko-bastion"
-  //  provisioner "ansible" {
-  //    connection {
-  //      user = "ec2-user"
-  //      private_key = "/home/eneko/.ssh/eneko-development.pem"
-  //    }
-  //    playbook = "ansible/etcd-playbook.yml"
-  //  }
-
   tags = {
     Name = "eneko.public"
   }
@@ -154,7 +154,7 @@ resource "aws_security_group" "elb" {
   ingress {
     from_port = 0
     to_port = 2379
-    protocol = "http"
+    protocol = "tcp"
     cidr_blocks = [
       "0.0.0.0/0"]
   }
@@ -230,7 +230,7 @@ resource "aws_security_group" "etcd" {
   ingress {
     from_port = 0
     to_port = 2379
-    protocol = "http"
+    protocol = "tcp"
     cidr_blocks = [
       "0.0.0.0/0"]
   }
@@ -242,6 +242,15 @@ resource "aws_security_group" "etcd" {
     cidr_blocks = [
       "0.0.0.0/0"]
   }
+
+  ingress {
+    from_port = 0
+    to_port = 0
+    protocol = "icmp"
+    cidr_blocks = [
+      "0.0.0.0/0"]
+  }
+
 
   egress {
     from_port = 0
