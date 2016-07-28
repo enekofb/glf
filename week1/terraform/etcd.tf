@@ -1,50 +1,37 @@
+## AWS provider
 provider "aws" {
   region = "${var.region}"
   access_key = "${var.access_key}"
   secret_key = "${var.secret_key}"
 }
 
+## Setting up VPC
 resource "aws_vpc" "eneko-vpc" {
   cidr_block = "10.20.0.0/16"
   tags = {
     Name = "eneko"
   }
-//  main_route_table_id = "${aws_route_table.eneko-vpc-routing-table.id}"
 }
 
-resource "aws_security_group" "eneko-sg-all" {
-  vpc_id = "${aws_vpc.eneko-vpc.id}"
-  name = "eneko-sg-all"
-  description = "allows all traffic"
-
-  tags = {
-    Name = "eneko"
-  }
-
-  ingress {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
-    cidr_blocks = [
-      "0.0.0.0/0"]
-  }
-
-  egress {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
-    cidr_blocks = [
-      "0.0.0.0/0"]
-  }
-
-}
-
-
+## Setting up public network
 resource "aws_internet_gateway" "eneko-vpc-gw" {
   vpc_id = "${aws_vpc.eneko-vpc.id}"
   tags = {
     Name = "eneko"
   }
+}
+
+resource "aws_subnet" "public" {
+  count ="${var.zone_count}"
+  vpc_id = "${aws_vpc.eneko-vpc.id}"
+  cidr_block = "${lookup(var.public_subnet_cidr_block, count.index)}"
+
+  availability_zone = "${lookup(var.eu-west-availablity-zone, count.index)}"
+
+  tags = {
+    Name = "eneko.public"
+  }
+
 }
 
 resource "aws_route_table" "eneko-vpc-routing-table" {
@@ -61,12 +48,35 @@ resource "aws_route_table" "eneko-vpc-routing-table" {
 
 }
 
-resource "aws_subnet" "public" {
+resource "aws_route_table_association" "public" {
   count ="${var.zone_count}"
-  vpc_id = "${aws_vpc.eneko-vpc.id}"
-  cidr_block = "${lookup(var.public_subnet_cidr_block, count.index)}"
+  subnet_id = "${element(aws_subnet.public.*.id, count.index)}"
+  route_table_id = "${aws_route_table.eneko-vpc-routing-table.id}"
+}
 
-  availability_zone = "${lookup(var.eu-west-availablity-zone, count.index)}"
+
+#bastion setup
+
+resource "aws_eip" "eneko-bastion-eip" {
+  vpc = true
+  instance = "${aws_instance.eneko-bastion.id}"
+}
+
+resource "aws_instance" "eneko-bastion" {
+  count ="1"
+  subnet_id = "${element(aws_subnet.public.*.id, count.index)}"
+  vpc_security_group_ids = [
+    "${aws_security_group.bastion.id}"]
+  ami = "ami-f9dd458a"
+  instance_type = "t2.nano"
+  key_name = "eneko-bastion"
+  //  provisioner "ansible" {
+  //    connection {
+  //      user = "ec2-user"
+  //      private_key = "/home/eneko/.ssh/eneko-development.pem"
+  //    }
+  //    playbook = "ansible/etcd-playbook.yml"
+  //  }
 
   tags = {
     Name = "eneko.public"
@@ -74,10 +84,30 @@ resource "aws_subnet" "public" {
 
 }
 
-resource "aws_route_table_association" "public" {
-  count ="${var.zone_count}"
-  subnet_id = "${element(aws_subnet.public.*.id, count.index)}"
-  route_table_id = "${aws_route_table.eneko-vpc-routing-table.id}"
+resource "aws_security_group" "bastion" {
+  vpc_id = "${aws_vpc.eneko-vpc.id}"
+  description = "allows input ssh to bastion instance"
+
+  tags = {
+    Name = "eneko.public"
+  }
+
+  ingress {
+    from_port = 0
+    to_port = 22
+    protocol = "tcp"
+    cidr_blocks = [
+      "0.0.0.0/0"]
+  }
+
+  egress {
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
+    cidr_blocks = [
+      "0.0.0.0/0"]
+  }
+
 }
 
 resource "aws_elb" "etcd" {
@@ -87,11 +117,11 @@ resource "aws_elb" "etcd" {
     "${element(aws_subnet.public.*.id, 1)}",
     "${element(aws_subnet.public.*.id, 2)}"]
   instances = [
-    "${element(aws_instance.etcd-ec2.*.id,0)}",
-    "${element(aws_instance.etcd-ec2.*.id,1)}",
-    "${element(aws_instance.etcd-ec2.*.id,2)}"]
+    "${element(aws_instance.etcd.*.id,0)}",
+    "${element(aws_instance.etcd.*.id,1)}",
+    "${element(aws_instance.etcd.*.id,2)}"]
   security_groups = [
-    "${aws_security_group.eneko-sg-all.id}"]
+    "${aws_security_group.elb.id}"]
 
   listener {
     instance_port = 2379
@@ -113,6 +143,34 @@ resource "aws_elb" "etcd" {
   }
 }
 
+resource "aws_security_group" "elb" {
+  vpc_id = "${aws_vpc.eneko-vpc.id}"
+  description = "allows etcd traffic to elb"
+
+  tags = {
+    Name = "eneko.public"
+  }
+
+  ingress {
+    from_port = 0
+    to_port = 2379
+    protocol = "http"
+    cidr_blocks = [
+      "0.0.0.0/0"]
+  }
+
+  egress {
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
+    cidr_blocks = [
+      "0.0.0.0/0"]
+  }
+
+}
+
+
+# Private subnets
 resource "aws_subnet" "private" {
   count ="${var.zone_count}"
   vpc_id = "${aws_vpc.eneko-vpc.id}"
@@ -126,15 +184,17 @@ resource "aws_subnet" "private" {
 
 }
 
+
+# NAT gateways
+resource "aws_eip" "private" {
+  count ="${var.zone_count}"
+  vpc = true
+}
+
 resource "aws_nat_gateway" "private" {
   count ="${var.zone_count}"
   subnet_id = "${element(aws_subnet.public.*.id, count.index)}"
   allocation_id = "${element(aws_eip.private.*.id, count.index)}"
-}
-
-resource "aws_eip" "private" {
-  count ="${var.zone_count}"
-  vpc = true
 }
 
 resource "aws_route_table" "private" {
@@ -151,17 +211,54 @@ resource "aws_route_table" "private" {
   }
 }
 
+
+# ETCD ec2 instances
 resource "aws_route_table_association" "private" {
   count ="${var.zone_count}"
   subnet_id = "${element(aws_subnet.private.*.id, count.index)}"
   route_table_id = "${element(aws_route_table.private.*.id, count.index)}"
 }
 
-resource "aws_instance" "etcd-ec2" {
+resource "aws_security_group" "etcd" {
+  vpc_id = "${aws_vpc.eneko-vpc.id}"
+  description = "allows ssh and etcd traffic to etcd instances"
+
+  tags = {
+    Name = "eneko.private"
+  }
+
+  ingress {
+    from_port = 0
+    to_port = 2379
+    protocol = "http"
+    cidr_blocks = [
+      "0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port = 0
+    to_port = 22
+    protocol = "tcp"
+    cidr_blocks = [
+      "0.0.0.0/0"]
+  }
+
+  egress {
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
+    cidr_blocks = [
+      "0.0.0.0/0"]
+  }
+
+}
+
+
+resource "aws_instance" "etcd" {
   count ="${var.zone_count}"
   subnet_id = "${element(aws_subnet.private.*.id, count.index)}"
   vpc_security_group_ids = [
-    "${aws_security_group.eneko-sg-all.id}"]
+    "${aws_security_group.etcd.id}"]
   ami = "ami-f9dd458a"
   instance_type = "t2.nano"
   key_name = "eneko-glf"
@@ -169,31 +266,4 @@ resource "aws_instance" "etcd-ec2" {
   tags = {
     Name = "eneko.private"
   }
-}
-
-resource "aws_eip" "eneko-bastion-eip" {
-  vpc = true
-  instance = "${aws_instance.eneko-bastion.id}"
-}
-
-resource "aws_instance" "eneko-bastion" {
-  count ="1"
-  subnet_id = "${element(aws_subnet.public.*.id, count.index)}"
-  vpc_security_group_ids = [
-    "${aws_security_group.eneko-sg-all.id}"]
-  ami = "ami-f9dd458a"
-  instance_type = "t2.nano"
-  key_name = "eneko-bastion"
-//  provisioner "ansible" {
-//    connection {
-//      user = "ec2-user"
-//      private_key = "/home/eneko/.ssh/eneko-development.pem"
-//    }
-//    playbook = "ansible/etcd-playbook.yml"
-//  }
-
-  tags = {
-    Name = "eneko.public"
-  }
-
 }
