@@ -1,0 +1,6 @@
+- name: Ansible provisioner
+  hosts: all
+  remote_user: ec2-user
+  roles:
+  - { role: openvpn, tags: ['tag_Name_eneko_public'] }
+  become: true
