@@ -85,3 +85,22 @@ Very rough an basic one with the following tasks
   shell: nohup /tmp/etcd-v3.0.3-linux-amd64/etcd &
   become: true
 
+
+### Provisioning though VPN
+1) provision the bastion with ansible openvpn role
+
+ ansible-playbook -vvvv -i ./week1/ansible/inventories/external/ec2.py ./week1/ansible/openvpn-playbook.yml
+
+2) remove ssh config for routes to host
+
+Host 10.20.*
+  IdentityFile ~/.ssh/eneko-glf.pem
+  ProxyCommand ssh ec2-user@bastion -W %h:%p
+
+Host 52.*
+ IdentityFile ~/.ssh/eneko-bastion.pem
+ ForwardAgent yes
+
+3) Provision existing instances as usual with ansible
+ ansible-playbook -vvvv -i ./inventories/internal/ec2.py -u ec2-user --private-key=$HOME/.ssh/eneko-glf.pem ./etcd-playbook.yml
+

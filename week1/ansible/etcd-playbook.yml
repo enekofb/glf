@@ -1,5 +1,4 @@
 - name: Ansible provisioner
   hosts: all
-  remote_user: ec2-user
   roles:
-  - { role: etcd, tags: ['tag_Name_eneko_private'] }
+  - { role: etcd }
