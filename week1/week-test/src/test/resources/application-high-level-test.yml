@@ -1,0 +1,5 @@
+glf:
+  services:
+  - name: etcd
+    uri: http://etcd-elb-1449198635.eu-west-1.elb.amazonaws.com:2379/v2/keys/helloworld
+
