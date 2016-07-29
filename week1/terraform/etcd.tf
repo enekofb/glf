@@ -259,7 +259,7 @@ resource "aws_instance" "etcd" {
   subnet_id = "${element(aws_subnet.private.*.id, count.index)}"
   vpc_security_group_ids = [
     "${aws_security_group.etcd.id}"]
-  ami = "ami-f9dd458a"
+  ami = "ami-f9dd452a"
   instance_type = "t2.nano"
   key_name = "eneko-glf"
 

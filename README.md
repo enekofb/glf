@@ -104,3 +104,55 @@ Host 52.*
 3) Provision existing instances as usual with ansible
  ansible-playbook -vvvv -i ./inventories/internal/ec2.py -u ec2-user --private-key=$HOME/.ssh/eneko-glf.pem ./etcd-playbook.yml
 
+#Throubleshooting
+
+##With ansible and dynamic inventory
+
+E.g. when executing ec2.py for internal purposes but you have previously executed the script for external purposes it may
+ returns from external --> you should change cache settings below
+
+ API calls to EC2 are slow. For this reason, we cache the results of an API
+ call. Set this to the path you want cache files to be written to. Two files
+ will be written to this directory:
+   - ansible-ec2.cache
+   - ansible-ec2.index
+cache_path = ~/.ansible/tmp/{internal/external}
+
+ The number of seconds a cache file is considered valid. After this many
+ seconds, a new API call will be made, and the cache file will be updated.
+ To disable the cache, set this value to 0
+cache_max_age = 300
+
+## How to run the example
+
+1) Terraform infrastructure provisioning
+
+terraform apply -var 'access_key={your_access_key}' -var 'secret_key={your_secret_key}'
+
+2) Run vpn server on the bastion with ansible
+
+ansible-playbook -vvvv -i ./week1/ansible/inventories/external/ec2.py ./week1/ansible/openvpn-playbook.yml
+
+3) Setup your vpn client
+ - Previous step has created a zip with all client relevant configuration and certificate files.
+ - start your vpn client with previous configuration with command
+ openvpn --config etcd.ovpn start&
+
+4) Run ansible etcd playbook to provision private instances through vpn
+
+ansible-playbook -vvvv -i ./inventories/internal/ec2.py -u ec2-user --private-key=$HOME/.ssh/eneko-glf.pem ./etcd-playbook.yml
+
+5) Test etcd pointing your balancer
+
+http://etcd-elb-1449198635.eu-west-1.elb.amazonaws.com:2379/v2/keys/helloworld
+
+Notice that load balancer needs the instances to be ready so in case that you do not get response for previous
+answer,you should check that the load balancer has every instance in "InService" state.
+
+## Testing
+
+Three layers to test (traditional testing pyramid):
+
+- low testing:
+- middle testing:
+- high testing:
