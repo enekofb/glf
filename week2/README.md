@@ -18,6 +18,13 @@ combined with best-of-breed ideas and practices from the community.
 Goal: this lab will walk you through provisioning the compute instances required for running a H/A Kubernetes cluster.
 A total of 9 virtual machines will be created.
 
+We use Terraform (instead of CLI) to create the infrastructure (using knowledge from week1)
+
+### testing
+
+I want to test that infrastructure has been provisioned and it meets requirements. If Terraform has been successfully executed
+we could make sure that it works pretty much.
+
 
 
 

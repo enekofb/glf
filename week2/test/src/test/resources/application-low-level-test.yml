@@ -1,0 +1,11 @@
+glf:
+  hosts:
+  - type: etcd
+    ip: 52.209.184.168
+  - type: k8s-controller
+    ip: 52.209.134.102
+  - type: k8s-worker
+    ip: 52.51.140.121
+
+
+
