@@ -1,0 +1,6 @@
+
+- name: copy cert files
+  copy: src=./roles/cert/files/ca dest=~/ owner=ec2-user group=ec2-user mode=0400 force=yes
+  register: copied
+
+- debug: var=copied verbosity=4

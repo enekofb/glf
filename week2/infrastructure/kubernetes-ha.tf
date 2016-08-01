@@ -127,6 +127,11 @@ resource "aws_security_group" "kubernetes" {
 }
 
 # etcd eips
+resource "aws_eip" "kubernetes-eip" {
+  vpc = true
+}
+
+# etcd eips
 resource "aws_eip" "etcd-eip" {
   count = "${var.etcd_count}"
   vpc = true

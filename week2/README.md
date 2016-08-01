@@ -22,9 +22,20 @@ We use Terraform (instead of CLI) to create the infrastructure (using knowledge 
 
 ### testing
 
-I want to test that infrastructure has been provisioned and it meets requirements. If Terraform has been successfully executed
-we could make sure that it works pretty much.
+I want to test that infrastructure has been provisioned and it meets requirements.
 
+Scenarios to check security policies have been added. They are cucumber-based.
+
+
+## Lab2: setting up CA and TLS cert generation
+
+Certification generate by following lab instructions. Noticed that some of ips for ca configuration makes relation to
+ google cloud stuff so they have been removed
+
+ Created Ansible playbook to provision instance files
+
+ ### testing
+ No testing done for this lab so nothing really needs testing.
 
 
 

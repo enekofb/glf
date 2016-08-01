@@ -41,6 +41,12 @@ public class Ec2StepDefs {
     }
 
     @Then("^I have successfully connected to it$")
-    public void iHaveSucessfullyConnectToIt() throws Throwable {
+    public void iHaveSuccessfullyConnectToIt() throws Throwable {
+        //TODO:nothing, just to improve readability
+    }
+
+    @When("^I try to connect by (.*) to port (\\d+)$")
+    public void iTryToConnectByTcpToPort(String protocol, int port) throws Throwable {
+        assertThat(serviceConfiguration.connect(protocol,port)).isTrue();
     }
 }
