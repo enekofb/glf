@@ -64,7 +64,7 @@ resource "aws_security_group" "kubernetes" {
 
   #icmp allowed
   ingress {
-    from_port = 0
+    from_port = 8
     to_port = 0
     protocol = "icmp"
     cidr_blocks = [
@@ -128,19 +128,20 @@ resource "aws_security_group" "kubernetes" {
 
 # etcd eips
 resource "aws_eip" "etcd-eip" {
-  count ="${var.etcd_count}"
+  count = "${var.etcd_count}"
   vpc = true
   instance = "${element(aws_instance.etcd.*.id, count.index)}"
 }
 
 resource "aws_instance" "etcd" {
-  count ="${var.etcd_count}"
+  count = "${var.etcd_count}"
   subnet_id = "${element(aws_subnet.public.*.id, count.index)}"
   vpc_security_group_ids = [
     "${aws_security_group.kubernetes.id}"]
   ami = "ami-f9dd458a"
   instance_type = "t2.nano"
   key_name = "eneko-glf"
+  private_ip = "${cidrhost(var.public_subnet_cidr_block, count.index +10)}"
 
   tags = {
     Name = "eneko.kubernetes.etcd"
@@ -150,20 +151,20 @@ resource "aws_instance" "etcd" {
 
 # k8s controllers eips
 resource "aws_eip" "k8s-controller-eip" {
-  count ="${var.k8s_controller_count}"
+  count = "${var.k8s_controller_count}"
   vpc = true
   instance = "${element(aws_instance.k8scontroller.*.id, count.index)}"
 }
 
 resource "aws_instance" "k8scontroller" {
-  count ="${var.k8s_controller_count}"
+  count = "${var.k8s_controller_count}"
   subnet_id = "${element(aws_subnet.public.*.id, count.index)}"
   vpc_security_group_ids = [
     "${aws_security_group.kubernetes.id}"]
   ami = "ami-f9dd458a"
   instance_type = "t2.nano"
   key_name = "eneko-glf"
-
+  private_ip = "${cidrhost(var.public_subnet_cidr_block, count.index +20)}"
   tags = {
     Name = "eneko.kubernetes.controllers"
   }
@@ -171,23 +172,22 @@ resource "aws_instance" "k8scontroller" {
 
 # k8s worker eips
 resource "aws_eip" "k8s-worker-eip" {
-  count ="${var.k8s_workers_count}"
+  count = "${var.k8s_workers_count}"
   vpc = true
   instance = "${element(aws_instance.k8sworkers.*.id, count.index)}"
 }
 
 resource "aws_instance" "k8sworkers" {
-  count ="${var.k8s_workers_count}"
+  count = "${var.k8s_workers_count}"
   subnet_id = "${element(aws_subnet.public.*.id, count.index)}"
   vpc_security_group_ids = [
     "${aws_security_group.kubernetes.id}"]
   ami = "ami-f9dd458a"
   instance_type = "t2.nano"
   key_name = "eneko-glf"
-
+  private_ip = "${cidrhost(var.public_subnet_cidr_block, count.index +30)}"
   tags = {
     Name = "eneko.kubernetes.workers"
   }
 }
-
 
