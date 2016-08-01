@@ -84,6 +84,7 @@ resource "aws_instance" "eneko-bastion" {
 
 }
 
+#firewall rules
 resource "aws_security_group" "bastion" {
   vpc_id = "${aws_vpc.eneko-vpc.id}"
   description = "allows input ssh to bastion instance"
