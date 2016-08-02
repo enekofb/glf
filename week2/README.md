@@ -79,3 +79,7 @@ Impr: not to have kube services configuration files
 To execute the command for controllers
 
 ansible-playbook -vvvv -t "k8s-controller" -i ./provisioning/inventories/k8s-controllers/ec2.py -u centos --private-key=$HOME/.ssh/eneko-glf.pem ./provisioning/playbook.yml
+
+## Lab5: Bootstrapping a H/A Kubernetes Cluste workers
+
+what is Container Network Interface

@@ -1,0 +1,82 @@
+
+- name: create kubernetes dir
+  file: path=/var/lib/kubernetes state=directory mode=0755 owner=centos group=centos recurse=true
+  become: true
+
+- name: ca.pem copy to kubernetes directory
+  copy: src=~/ca/ca.pem dest=/var/lib/kubernetes owner=centos group=centos force=yes remote_src=true
+
+- name: kubernetes-key.pem copy to kubernetes directory
+  copy: src=~/ca/kubernetes-key.pem dest=/var/lib/kubernetes owner=centos group=centos mode=0400 force=yes remote_src=true
+
+- name: kubernetes.pem copy to kubernetes direct
+  copy: src=~/ca/kubernetes.pem dest=/var/lib/kubernetes owner=centos group=centos mode=0400 force=yes remote_src=true
+
+## Docker
+
+- name: download docker
+  get_url: url=https://get.docker.com/builds/Linux/x86_64/docker-1.11.2.tgz dest=/tmp owner=centos group=centos mode=0700
+
+- name: untar docker
+  unarchive: src=/tmp/docker-1.11.2.tgz dest=/tmp copy=no
+
+- name: copy docker bin to /usr/bin
+  command: /bin/sh -c 'cp -f /tmp/docker/* /usr/bin/'
+  become: true
+
+## CNI
+- name: create Container Network Interface dir
+  file: path=/opt/cni state=directory mode=0755 owner=centos group=centos recurse=true
+  become: true
+
+- name: download cni
+  get_url: url=https://storage.googleapis.com/kubernetes-release/network-plugins/cni-c864f0e1ea73719b8f4582402b0847064f9883b0.tar.gz dest=/tmp owner=centos group=centos mode=0700
+
+- name: untar cni
+  unarchive: src=/tmp/cni-c864f0e1ea73719b8f4582402b0847064f9883b0.tar.gz dest=/opt/cni copy=no
+  become: true
+
+## Kubernetes
+- name: create kubelet dir
+  file: path=/var/lib/kubelet state=directory mode=0755 owner=centos group=centos recurse=true
+  become: true
+
+- name: download kubernetes workers
+  get_url: url={{item}} dest=/usr/bin owner=centos group=centos mode=0700
+  with_items:
+  - https://storage.googleapis.com/kubernetes-release/release/v1.3.0/bin/linux/amd64/kubectl
+  - https://storage.googleapis.com/kubernetes-release/release/v1.3.0/bin/linux/amd64/kubelet
+  - https://storage.googleapis.com/kubernetes-release/release/v1.3.0/bin/linux/amd64/kube-proxy
+  become: true
+
+- name: create kubelet config file
+  template: src=kubeconfig.j2 dest=/var/lib/kubelet/kubeconfig owner=root group=root
+  become: true
+
+- name: create kuberntes worker services
+  template: src={{item}}.service.j2 dest=/etc/systemd/system/{{item}}.service owner=root group=root
+  become: true
+  with_items:
+  - docker
+  - kubelet
+  - kube-proxy
+
+- name: reload systemd
+  shell: systemctl daemon-reload
+  become: yes
+
+- name: enable kubernetes worker
+  shell: systemctl enable {{item}}
+  become: yes
+  with_items:
+  - docker
+  - kubelet
+  - kube-proxy
+
+- name: start kubernetes worker
+  shell: systemctl restart {{item}}
+  become: yes
+  with_items:
+  - docker
+  - kubelet
+  - kube-proxy

@@ -4,3 +4,4 @@
   - { role: cert, tags: ['etcd','k8s-controller','k8s-worker']}
   - { role: etcd, tags: ['etcd']}
   - { role: k8s-controller, tags: ['k8s-controller']}
+  - { role: k8s-worker, tags: ['k8s-worker']}
