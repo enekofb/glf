@@ -1,0 +1,51 @@
+
+- debug: var=ec2_private_dns_name
+- debug: var=ec2_private_ip
+
+- name: create etcd dir
+  file: path=/etc/etcd state=directory mode=0755 owner=centos group=centos recurse=true
+  become: true
+
+- name: ca.pem copy to etcd directory
+  copy: src=~/ca/ca.pem dest=/etc/etcd owner=centos group=centos force=yes remote_src=true
+
+- name: kubernetes-key.pem copy to etcd directory
+  copy: src=~/ca/kubernetes-key.pem dest=/etc/etcd owner=centos group=centos mode=0400 force=yes remote_src=true
+
+- name: kubernetes.pem copy to etcd direct
+  copy: src=~/ca/kubernetes.pem dest=/etc/etcd owner=centos group=centos mode=0400 force=yes remote_src=true
+
+- name: download etcd
+  get_url: url=https://github.com/coreos/etcd/releases/download/v3.0.3/etcd-v3.0.3-linux-amd64.tar.gz dest=/tmp/etcd.tar.gz
+
+- name: untar etcd
+  unarchive: src=/tmp/etcd.tar.gz dest=/usr/bin copy=no
+  become: true
+
+- name: copy etcd bin to /usr/bin
+  copy: src=/usr/bin/etcd-v3.0.3-linux-amd64/etcd dest=/usr/bin/etcd force=yes remote_src=true mode=0744
+  become: true
+
+- name: copy etcdctl bin to /usr/bin
+  copy: src=/usr/bin/etcd-v3.0.3-linux-amd64/etcdctl dest=/usr/bin/etcdctl force=yes remote_src=true mode=0744
+  become: true
+
+- name: create etcd data dir
+  file: path=/var/lib/etcd state=directory mode=0755 owner=centos group=centos recurse=true
+  become: true
+
+- name: create etcd service
+  template: src=etcd.service.j2 dest=/etc/systemd/system/etcd.service owner=root group=root
+  become: true
+
+- name: reload systemd
+  shell: systemctl daemon-reload
+  become: yes
+
+- name: enable etcd
+  shell: systemctl enable etcd
+  become: yes
+
+- name: start etcd
+  shell: systemctl restart etcd
+  become: yes

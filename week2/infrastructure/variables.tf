@@ -15,7 +15,7 @@ variable "public_subnet_cidr_block" {
 }
 
 variable "etcd_count" {
-  default = "1"
+  default = "3"
 }
 
 variable "k8s_controller_count" {

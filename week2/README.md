@@ -38,4 +38,39 @@ Certification generate by following lab instructions. Noticed that some of ips f
  No testing done for this lab so nothing really needs testing.
 
 
+## Lab3: Bootstrapping a H/A etcd cluster
+
+Ansible playbook to setup etcd cluster
+
+ ansible-playbook -vvvv -t "etcd" -i ./provisioning/inventories/etcd/ec2.py -u centos --private-key=$HOME/.ssh/eneko-glf.pem ./provisioning/playbook.yml
+
+
+Difficulties found: with dynamic inventory setup ectd.service configuration file in order to have all the names and ips ready
+for the command to start
+
+[Service]
+ExecStart=/usr/bin/etcd --name {{ec2_private_dns_name}} \
+  --cert-file=/etc/etcd/kubernetes.pem \
+  --key-file=/etc/etcd/kubernetes-key.pem \
+  --peer-cert-file=/etc/etcd/kubernetes.pem \
+  --peer-key-file=/etc/etcd/kubernetes-key.pem \
+  --trusted-ca-file=/etc/etcd/ca.pem \
+  --peer-trusted-ca-file=/etc/etcd/ca.pem \
+  --initial-advertise-peer-urls https://{{ec2_private_ip_address}}:2380 \
+  --listen-peer-urls https://{{ec2_private_ip_address}}:2380 \
+  --listen-client-urls https://{{ec2_private_ip_address}}:2379 \
+  --advertise-client-urls https://{{ec2_private_ip_address}}:2379 \
+  --initial-cluster-token etcd-cluster-0 \
+  --initial-cluster ip-10-20-1-10.eu-west-1.compute.internal=https://10.20.1.10:2380,ip-10-20-1-11.eu-west-1.compute.internal=https://10.20.1.11:2380,ip-10-20-1-12.eu-west-1.compute.internal=https://10.20.1.12:2380 \
+  --initial-cluster-state new \
+  --data-dir=/var/lib/etcd
+
+Health check
+[centos@ip-10-20-1-12 ~]$ sudo etcdctl --ca-file=/etc/etcd/ca.pem cluster-health
+
+member 800208a486493917 is healthy: got healthy result from https://10.20.1.10:2379
+member c27ba28489d75dbf is healthy: got healthy result from https://10.20.1.12:2379
+member fe3e8dbe8af16beb is healthy: got healthy result from https://10.20.1.11:2379
+
+
 

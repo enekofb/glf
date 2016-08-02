@@ -11,6 +11,7 @@ resource "aws_vpc" "vpc" {
   tags = {
     Name = "eneko.kubernetes"
   }
+  enable_dns_hostnames = true
 }
 
 ## Setting up public network
@@ -143,7 +144,7 @@ resource "aws_instance" "etcd" {
   subnet_id = "${element(aws_subnet.public.*.id, count.index)}"
   vpc_security_group_ids = [
     "${aws_security_group.kubernetes.id}"]
-  ami = "ami-f9dd458a"
+  ami = "ami-7abd0209"
   instance_type = "t2.nano"
   key_name = "eneko-glf"
   private_ip = "${cidrhost(var.public_subnet_cidr_block, count.index +10)}"
@@ -166,7 +167,7 @@ resource "aws_instance" "k8scontroller" {
   subnet_id = "${element(aws_subnet.public.*.id, count.index)}"
   vpc_security_group_ids = [
     "${aws_security_group.kubernetes.id}"]
-  ami = "ami-f9dd458a"
+  ami = "ami-7abd0209"
   instance_type = "t2.nano"
   key_name = "eneko-glf"
   private_ip = "${cidrhost(var.public_subnet_cidr_block, count.index +20)}"
@@ -187,7 +188,7 @@ resource "aws_instance" "k8sworkers" {
   subnet_id = "${element(aws_subnet.public.*.id, count.index)}"
   vpc_security_group_ids = [
     "${aws_security_group.kubernetes.id}"]
-  ami = "ami-f9dd458a"
+  ami = "ami-7abd0209"
   instance_type = "t2.nano"
   key_name = "eneko-glf"
   private_ip = "${cidrhost(var.public_subnet_cidr_block, count.index +30)}"
