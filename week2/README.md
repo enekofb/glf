@@ -72,5 +72,10 @@ member 800208a486493917 is healthy: got healthy result from https://10.20.1.10:2
 member c27ba28489d75dbf is healthy: got healthy result from https://10.20.1.12:2379
 member fe3e8dbe8af16beb is healthy: got healthy result from https://10.20.1.11:2379
 
+## Lab4: Bootstrapping a H/A Kubernetes Control Plane
 
+Impr: not to have kube services configuration files
 
+To execute the command for controllers
+
+ansible-playbook -vvvv -t "k8s-controller" -i ./provisioning/inventories/k8s-controllers/ec2.py -u centos --private-key=$HOME/.ssh/eneko-glf.pem ./provisioning/playbook.yml

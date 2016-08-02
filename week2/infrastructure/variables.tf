@@ -19,7 +19,7 @@ variable "etcd_count" {
 }
 
 variable "k8s_controller_count" {
-  default = "1"
+  default = "3"
 }
 
 variable "k8s_workers_count" {

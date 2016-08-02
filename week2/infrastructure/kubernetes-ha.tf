@@ -11,7 +11,6 @@ resource "aws_vpc" "vpc" {
   tags = {
     Name = "eneko.kubernetes"
   }
-  enable_dns_hostnames = true
 }
 
 ## Setting up public network
@@ -194,6 +193,37 @@ resource "aws_instance" "k8sworkers" {
   private_ip = "${cidrhost(var.public_subnet_cidr_block, count.index +30)}"
   tags = {
     Name = "eneko.kubernetes.workers"
+  }
+}
+
+
+resource "aws_elb" "k8s-api-server" {
+  name = "k8s-api-server-elb"
+  subnets = ["${element(aws_subnet.public.*.id, count.index)}"]
+  instances = [
+    "${element(aws_instance.k8scontroller.*.id,0)}",
+    "${element(aws_instance.k8scontroller.*.id,1)}",
+    "${element(aws_instance.k8scontroller.*.id,2)}"]
+  security_groups = [
+    "${aws_security_group.kubernetes.id}"]
+
+  listener {
+    instance_port = 6443
+    instance_protocol = "http"
+    lb_port = 6443
+    lb_protocol = "http"
+  }
+
+  health_check {
+    healthy_threshold = 2
+    unhealthy_threshold = 2
+    timeout = 3
+    target = "http:8080/healthz"
+    interval = 30
+  }
+
+  tags {
+    Name = "eneko.kubernetes"
   }
 }
 

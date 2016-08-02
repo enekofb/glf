@@ -1,0 +1,56 @@
+
+- name: create kubernetes dir
+  file: path=/var/lib/kubernetes state=directory mode=0755 owner=centos group=centos recurse=true
+  become: true
+
+- name: ca.pem copy to kubernetes directory
+  copy: src=~/ca/ca.pem dest=/var/lib/kubernetes owner=centos group=centos force=yes remote_src=true
+
+- name: kubernetes-key.pem copy to kubernetes directory
+  copy: src=~/ca/kubernetes-key.pem dest=/var/lib/kubernetes owner=centos group=centos mode=0400 force=yes remote_src=true
+
+- name: kubernetes.pem copy to kubernetes direct
+  copy: src=~/ca/kubernetes.pem dest=/var/lib/kubernetes owner=centos group=centos mode=0400 force=yes remote_src=true
+
+- name: download kubernetes
+  get_url: url={{item}} dest=/usr/bin owner=centos group=centos mode=0700
+  with_items:
+  - https://storage.googleapis.com/kubernetes-release/release/v1.3.0/bin/linux/amd64/kube-apiserver
+  - https://storage.googleapis.com/kubernetes-release/release/v1.3.0/bin/linux/amd64/kube-controller-manager
+  - https://storage.googleapis.com/kubernetes-release/release/v1.3.0/bin/linux/amd64/kube-scheduler
+  - https://storage.googleapis.com/kubernetes-release/release/v1.3.0/bin/linux/amd64/kubectl
+  become: true
+
+- name: setup kubernetes auhentication
+  get_url: url={{item}} dest=/var/lib/kubernetes owner=centos group=centos mode=0700
+  with_items:
+  - https://raw.githubusercontent.com/kelseyhightower/kubernetes-the-hard-way/master/token.csv
+  - https://raw.githubusercontent.com/kelseyhightower/kubernetes-the-hard-way/master/authorization-policy.jsonl
+
+- name: create kuberntes api server service
+  template: src={{item}}.service.j2 dest=/etc/systemd/system/{{item}}.service owner=root group=root
+  become: true
+  with_items:
+  - kube-apiserver
+  - kube-controller-manager
+  - kube-scheduler
+
+- name: reload systemd
+  shell: systemctl daemon-reload
+  become: yes
+
+- name: enable kubernetes
+  shell: systemctl enable {{item}}
+  become: yes
+  with_items:
+  - kube-apiserver
+  - kube-controller-manager
+  - kube-scheduler
+
+- name: start kubernetes
+  shell: systemctl restart {{item}}
+  become: yes
+  with_items:
+  - kube-apiserver
+  - kube-controller-manager
+  - kube-scheduler
