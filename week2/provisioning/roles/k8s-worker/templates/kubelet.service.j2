@@ -14,6 +14,7 @@ ExecStart=/usr/bin/kubelet \
   --configure-cbr0=true \
   --container-runtime=docker \
   --docker=unix:///var/run/docker.sock \
+  --hostname-override={{ec2_private_dns_name}} \
   --network-plugin=kubenet \
   --kubeconfig=/var/lib/kubelet/kubeconfig \
   --reconcile-cidr=true \

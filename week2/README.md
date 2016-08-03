@@ -82,4 +82,40 @@ ansible-playbook -vvvv -t "k8s-controller" -i ./provisioning/inventories/k8s-con
 
 ## Lab5: Bootstrapping a H/A Kubernetes Cluste workers
 
-what is Container Network Interface
+what is Container Network Interface?
+
+need to add the following option to kubelet service start in order to properly resolve dns name for the host
+
+--hostname-override={{ec2_private_dns_name}} \
+
+## Lab6: Configuring the Kubernetes Client - Remote Access
+
+- I could run the cluster without security by setting up the following rule on elb
+
+HTTP	6443	HTTPS	6443	N/A	N/A
+
+- kubectl installed and config but then I cannot setup authorization properly (seemed) so it does not finish.
+
+ kubectl --v=5 get componentstatuses
+I0802 17:38:43.920588   22578 helpers.go:173] server response object: [{
+  "metadata": {},
+  "status": "Failure",
+  "message": "the server has asked for the client to provide credentials",
+  "reason": "Unauthorized",
+  "details": {
+    "causes": [
+      {
+        "reason": "UnexpectedServerResponse",
+        "message": "Unauthorized"
+      }
+    ]
+  },
+  "code": 401
+}]
+
+however with Rest API I could do it
+
+curl $APISERVER/api/v1/componentstatuses --header "Authorization: Bearer $TOKEN"
+
+It seems that is not using a given config
+

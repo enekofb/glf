@@ -1,7 +1,18 @@
-- name: Ansible provisioner
-  hosts: all
+- hosts: tag_Name_eneko_kubernetes_etcd
+  tags: ['all','etcd']
   roles:
-  - { role: cert, tags: ['etcd','k8s-controller','k8s-worker']}
-  - { role: etcd, tags: ['etcd']}
-  - { role: k8s-controller, tags: ['k8s-controller']}
-  - { role: k8s-worker, tags: ['k8s-worker']}
+  - { role: cert}
+  - { role: etcd}
+
+- hosts: tag_Name_eneko_kubernetes_controllers
+  tags: ['all','k8s-controller']
+  roles:
+  - { role: cert}
+  - { role: k8s-controller, tags: ['all','k8s-controller']}
+
+- hosts: tag_Name_eneko_kubernetes_workers
+  tags: ['all','k8s-worker']
+  roles:
+  - { role: cert}
+  - { role: k8s-worker, tags: ['all','k8s-worker']}
+

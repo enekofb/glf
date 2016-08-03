@@ -11,6 +11,8 @@ resource "aws_vpc" "vpc" {
   tags = {
     Name = "eneko.kubernetes"
   }
+  enable_dns_hostnames = true
+  enable_dns_support = true
 }
 
 ## Setting up public network
@@ -209,9 +211,9 @@ resource "aws_elb" "k8s-api-server" {
 
   listener {
     instance_port = 6443
-    instance_protocol = "http"
+    instance_protocol = "tcp"
     lb_port = 6443
-    lb_protocol = "http"
+    lb_protocol = "tcp"
   }
 
   health_check {
