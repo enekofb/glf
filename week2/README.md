@@ -119,3 +119,4 @@ curl $APISERVER/api/v1/componentstatuses --header "Authorization: Bearer $TOKEN"
 
 It seems that is not using a given config
 
+## Lab7: Managing the Container Network Routes

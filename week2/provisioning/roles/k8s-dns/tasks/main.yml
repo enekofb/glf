@@ -1,0 +1,9 @@
+- name: generate kubernetes dns config file
+  template: src=kube-dns.j2 dest=/tmp/kube-dns.kube
+
+- name: remove kube dns
+  command: kubectl delete -f /tmp/kube-dns.kube
+
+- name: create kube dns
+  command: kubectl create -f /tmp/kube-dns.kube
+

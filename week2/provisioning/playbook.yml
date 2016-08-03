@@ -8,11 +8,23 @@
   tags: ['all','k8s-controller']
   roles:
   - { role: cert}
-  - { role: k8s-controller, tags: ['all','k8s-controller']}
+  - { role: k8s-controller}
 
 - hosts: tag_Name_eneko_kubernetes_workers
   tags: ['all','k8s-worker']
   roles:
   - { role: cert}
-  - { role: k8s-worker, tags: ['all','k8s-worker']}
+  - { role: k8s-worker}
+
+- hosts: localhost
+  tags: ['all','localhost']
+  roles:
+  - { role: k8s-dns}
+
+- hosts: localhost
+  tags: ['all','test']
+  roles:
+    - { role: smoke-test}
+
+
 

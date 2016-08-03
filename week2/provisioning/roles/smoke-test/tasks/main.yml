@@ -1,0 +1,36 @@
+- name: check if ngnix is running
+  command: bash -c "kubectl get pods | grep nginx | grep Running"
+  register: nginx_running_output
+
+#- name: run nginx if not running
+#  command: kubectl get nginx --image=nginx --port=80 --replicas=3
+#  register: nginx_output
+#  when: "'Running' not in nginx_running_output"
+#
+#- name: check if ngnix is running
+#  command: kubectl get pods -o wide |grep nginx|grep Running
+#  register: nginx_running_output
+
+#- assert:
+#    that:
+#      - "'Running' in nginx_running_output"
+
+
+#- name: expose deployment ngnix port
+#  command: bash -c "kubectl expose deployment nginx --type NodePort"
+#  register: nginx_deployment_port
+
+#- assert:
+#    that:
+#      - "'exposed' in nginx_deployment_port"
+
+- name: get node port
+  command: bash -c "kubectl get svc nginx --output=jsonpath='{range .spec.ports[0]}{.nodePort}'"
+  register: node_port
+
+
+- name: get node port
+  command: curl http://52.209.62.112:{{node_port['stdout']}}
+  register: node_nginx
+
+- debug: var=node_nginx
